@@ -1,2 +1,5 @@
-// deploy contracts, you want to migrate here
-module.exports = function(deployer) {};
+var TakaToken = artifacts.require("./TakaToken.sol");
+
+module.exports = function(deployer) {
+  deployer.deploy(TakaToken);
+};

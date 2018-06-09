@@ -1,6 +1,7 @@
 // Importing node-modules we need
 import { default as Web3 } from "web3";
 import { default as contract } from "truffle-contract";
+import TakaABI from "../build/contracts/TakaToken.json";
 
 // Importing compiled contracts here
 
@@ -8,7 +9,7 @@ import { default as contract } from "truffle-contract";
 import styles from "./styles/index.scss";
 
 // Making usable abstraction from our artifacts, so we can use it in code.
-// var contract = contract(contract_abi);
+var TakaToken = contract(TakaABI);
 
 window.App = {
     /**
@@ -28,8 +29,57 @@ window.App = {
     init: () => {
         App.initWeb3();
         // Init your contract here and set web3provider to it.
+        TakaToken.setProvider(web3.currentProvider);
+
+        let currAddr = document.getElementById("currAddr");
+        web3.eth.getAccounts(function (erro, result) {
+            web3.eth.defaultAccount = result[0];
+            console.log("Sender's Account: " + web3.eth.defaultAccount);
+            currAddr.innerHTML = web3.eth.defaultAccount;
+        });
+
+        App.getBalance();
+    },
+
+    getBalance: () => {
+        let currAmnt = document.getElementById("currAmnt");
+        TakaToken.deployed().then((instance) => {
+            return instance.balanceOf(web3.eth.defaultAccount)
+        }).then(res => {
+            console.log('Current balance: ' + res.toNumber());
+            currAmnt.innerHTML = res.toNumber();
+        })
+    },
+
+    transferTaka: () => {
+        let receiver = document.getElementById("receiver");
+        let amount = document.getElementById("amountToBeSent");
+
+        console.log('Receiver: ' + receiver.value + amount.value);
+        console.log('Amount to be sent: ' + amount.value);
+        
+
+        TakaToken.deployed().then(instance => {
+            instance.transfer(receiver.value, amount.value, {from: currAddr}).then (res => {
+                console.log(res);
+                instance.transfer().watch( (err, result) => {
+                    instance.balanceOf(currAddr).then( resa => {
+                        console.log('the transferEvent() event was triggered', err, result);
+                        console.log('dkjsfksdklj', resa);
+                    });
+                });
+            })
+
+            .catch ( (err) => {
+                console.log(err)
+            })
+        })
+
     }
+
 };
+
+
 
 /**
  * Initializing our App on window load
