@@ -10,7 +10,7 @@ import styles from "./styles/index.scss";
 
 // Making usable abstraction from our artifacts, so we can use it in code.
 var TakaToken = contract(TakaABI);
-
+let currAddr;
 window.App = {
     /**
      * Initializing Web3 provider for our app
@@ -31,11 +31,11 @@ window.App = {
         // Init your contract here and set web3provider to it.
         TakaToken.setProvider(web3.currentProvider);
 
-        let currAddr = document.getElementById("currAddr");
+        currAddr = web3.eth.defaultAccount;
         web3.eth.getAccounts(function (erro, result) {
             web3.eth.defaultAccount = result[0];
             console.log("Sender's Account: " + web3.eth.defaultAccount);
-            currAddr.innerHTML = web3.eth.defaultAccount;
+            document.getElementById("currAddr").innerHTML = web3.eth.defaultAccount;
         });
 
         App.getBalance();
@@ -46,7 +46,7 @@ window.App = {
         TakaToken.deployed().then((instance) => {
             return instance.balanceOf(web3.eth.defaultAccount)
         }).then(res => {
-            console.log('Current balance: ' + res.toNumber());
+            console.log('Current balanceee: ' + res.toNumber());
             currAmnt.innerHTML = res.toNumber();
         })
     },
@@ -55,13 +55,14 @@ window.App = {
         let receiver = document.getElementById("receiver");
         let amount = document.getElementById("amountToBeSent");
 
-        console.log('Receiver: ' + receiver.value + amount.value);
+        console.log('Receiver: ' + receiver.value);
         console.log('Amount to be sent: ' + amount.value);
         
 
         TakaToken.deployed().then(instance => {
+            console.log( "receiver.value: " + receiver.value);
+            console.log( "currAddr: " + currAddr);
             instance.transfer(receiver.value, amount.value, {from: currAddr}).then (res => {
-                console.log(res);
                 instance.transfer().watch( (err, result) => {
                     instance.balanceOf(currAddr).then( resa => {
                         console.log('the transferEvent() event was triggered', err, result);
