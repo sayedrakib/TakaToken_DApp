@@ -11,6 +11,7 @@ import styles from "./styles/index.scss";
 // Making usable abstraction from our artifacts, so we can use it in code.
 var TakaToken = contract(TakaABI);
 let currAddr;
+let currAmnt;
 window.App = {
     /**
      * Initializing Web3 provider for our app
@@ -31,9 +32,10 @@ window.App = {
         // Init your contract here and set web3provider to it.
         TakaToken.setProvider(web3.currentProvider);
 
-        currAddr = web3.eth.defaultAccount;
+        //currAddr = web3.eth.defaultAccount;
         web3.eth.getAccounts(function (erro, result) {
             web3.eth.defaultAccount = result[0];
+            currAddr = web3.eth.defaultAccount;
             console.log("Sender's Account: " + web3.eth.defaultAccount);
             document.getElementById("currAddr").innerHTML = web3.eth.defaultAccount;
         });
@@ -42,11 +44,11 @@ window.App = {
     },
 
     getBalance: () => {
-        let currAmnt = document.getElementById("currAmnt");
+        currAmnt = document.getElementById("currAmnt");
         TakaToken.deployed().then((instance) => {
             return instance.balanceOf(web3.eth.defaultAccount)
         }).then(res => {
-            console.log('Current balanceee: ' + res.toNumber());
+            console.log('Current balance: ' + res.toNumber());
             currAmnt.innerHTML = res.toNumber();
         })
     },
@@ -54,23 +56,26 @@ window.App = {
     transferTaka: () => {
         let receiver = document.getElementById("receiver");
         let amount = document.getElementById("amountToBeSent");
-
-        console.log('Receiver: ' + receiver.value);
-        console.log('Amount to be sent: ' + amount.value);
-        
+        let status = document.getElementById("status");  
 
         TakaToken.deployed().then(instance => {
             console.log( "receiver.value: " + receiver.value);
-            console.log( "currAddr: " + currAddr);
-            instance.transfer(receiver.value, amount.value, {from: currAddr}).then (res => {
-                instance.transfer().watch( (err, result) => {
-                    instance.balanceOf(currAddr).then( resa => {
-                        console.log('the transferEvent() event was triggered', err, result);
-                        console.log('dkjsfksdklj', resa);
+            console.log('Amount to be sent: ' + amount.value);
+            
+            instance.transfer(receiver.value, amount.value, { from: currAddr }).then (res => {
+                instance.Transfer().watch( (err, result) => {
+                    console.log( err, result);
+                    
+                    instance.balanceOf(currAddr).then( res => {
+                        currAmnt.innerHTML = res.toNumber();
+                        status.innerHTML = "Last completed event: " + result.event;
+                        receiver.value = "";
+                        amount.value = "";
+                        
                     });
                 });
-            })
 
+            })
             .catch ( (err) => {
                 console.log(err)
             })
